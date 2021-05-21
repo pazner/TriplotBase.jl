@@ -1,17 +1,20 @@
 """
-    tripcolor(x, y, z, t; zmin=nothing, zmax=nothing)
+    dgtripcolor(x, y, z, t; zmin=nothing, zmax=nothing)
 
-Draw a pseudocolor plot of unstructured triangular data. `x`, `y`, and `z` are
-one-dimensional input arrays of the same length (the number of points). `t` is an integer
-array of size `(3,nt)`, where `nt` is the number of triangles. The coordinates of the `i`th
-vertex of the `j`th triangle are given by `(x[t[i,j]], y[t[i,j]])`. Function values at
-vertices are specified by the `z` array
+Draw a pseudocolor plot of discontinuous unstructured triangular data. `x`, and `y`, are
+one-dimensional input arrays of the same length (the number of points). `t` is an integer array of
+size `(3,nt)`, where `nt` is the number of triangles. `z` is an array of the same size as `t`
+representing function values on each triangle (discontinuous across triangle edges). The coordinates
+of the `i`th vertex of the `j`th triangle are given by `(x[t[i,j]], y[t[i,j]])`. The function value
+at the `i`th vertex of the `j`th triangle is given by `z[i,j]`.
 
 The colormap is specified by `cmap`. The colormap bounds can be set by specifying values for `zmin`
 and `zmax`. If these parameters are set to `nothing`, then the minimum and maximum values of the `z`
 array will be used.
+
+For plotting continuous fields, see [`tripcolor`](@ref).
 """
-function tripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zmax=nothing, yflip=false, bg=nothing) where T
+function dgtripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zmax=nothing, yflip=false, bg=nothing) where T
     c = isnothing(bg) ? Matrix{T}(undef,px,py) : fill(bg,px,py)
     nc = length(cmap)
 
@@ -26,7 +29,7 @@ function tripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zm
     for it=1:nt
         xt = @views x[t[:,it]]
         yt = @views y[t[:,it]]
-        zt = @views z[t[:,it]]
+        zt = @views z[:,it]
 
         detT = (yt[2]-yt[3])*(xt[1]-xt[3]) + (xt[3]-xt[2])*(yt[1]-yt[3])
 
@@ -56,6 +59,29 @@ function tripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zm
         end
     end
     c
+end
+
+"""
+    tripcolor(x, y, z, t; zmin=nothing, zmax=nothing)
+
+Draw a pseudocolor plot of unstructured triangular data. `x`, `y`, and `z` are
+one-dimensional input arrays of the same length (the number of points). `t` is an integer
+array of size `(3,nt)`, where `nt` is the number of triangles. The coordinates of the `i`th
+vertex of the `j`th triangle are given by `(x[t[i,j]], y[t[i,j]])`. The function value at the `j`th
+vertex of the `i`th triangle is given by `z[i,j]`.
+
+The colormap is specified by `cmap`. The colormap bounds can be set by specifying values for `zmin`
+and `zmax`. If these parameters are set to `nothing`, then the minimum and maximum values of the `z`
+array will be used.
+
+For plotting discontinuous fields, see [`dgtripcolor`](@ref).
+"""
+function tripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zmax=nothing, yflip=false, bg=nothing) where T
+    dg_z = similar(t, eltype(z))
+    for it=1:size(t,2)
+        dg_z[:,it] .= @views z[t[:,it]]
+    end
+    dgtripcolor(x, y, z, t, cmap; px, py, zmin, zmax, bg)
 end
 
 function getcolorind(level,lmin,lmax,nc)

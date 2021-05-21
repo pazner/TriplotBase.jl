@@ -15,6 +15,10 @@ array will be used.
 For plotting continuous fields, see [`tripcolor`](@ref).
 """
 function dgtripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zmax=nothing, yflip=false, bg=nothing) where T
+    nv = length(x)
+    nt = size(t,2)
+    @assert (size(x) == (nv,) && size(y) == (nv,) && size(z) == (3,nt) && size(t) == (3,nt)) "Bad input sizes"
+
     c = isnothing(bg) ? Matrix{T}(undef,px,py) : fill(bg,px,py)
     nc = length(cmap)
 
@@ -25,7 +29,6 @@ function dgtripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, 
     isnothing(zmin) && (zmin = minimum(z))
     isnothing(zmax) && (zmax = maximum(z))
 
-    nt = size(t,2)
     for it=1:nt
         xt = @views x[t[:,it]]
         yt = @views y[t[:,it]]
@@ -77,11 +80,15 @@ array will be used.
 For plotting discontinuous fields, see [`dgtripcolor`](@ref).
 """
 function tripcolor(x, y, z, t, cmap::AbstractVector{T}; px, py, zmin=nothing, zmax=nothing, yflip=false, bg=nothing) where T
+    nv = length(x)
+    nt = size(t,2)
+    @assert (size(x) == (nv,) && size(y) == (nv,) && size(z) == (nv,) && size(t) == (3,nt)) "Bad input sizes"
+
     dg_z = similar(t, eltype(z))
-    for it=1:size(t,2)
+    for it=1:nt
         dg_z[:,it] .= @views z[t[:,it]]
     end
-    dgtripcolor(x, y, z, t, cmap; px, py, zmin, zmax, bg)
+    dgtripcolor(x, y, dg_z, t, cmap; px, py, zmin, zmax, bg)
 end
 
 function getcolorind(level,lmin,lmax,nc)

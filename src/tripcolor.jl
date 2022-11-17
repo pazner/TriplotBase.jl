@@ -71,7 +71,7 @@ Draw a pseudocolor plot of unstructured triangular data. `x`, `y`, and `z` are
 one-dimensional input arrays of the same length (the number of points). `t` is an integer
 array of size `(3,nt)`, where `nt` is the number of triangles. The coordinates of the `i`th
 vertex of the `j`th triangle are given by `(x[t[i,j]], y[t[i,j]])`. The function value at the `j`th
-vertex of the `i`th triangle is given by `z[i,j]`.
+vertex of the `i`th triangle is given by `z[t[i,j]]`.
 
 The colormap is specified by `cmap`. The colormap bounds can be set by specifying values for `zmin`
 and `zmax`. If these parameters are set to `nothing`, then the minimum and maximum values of the `z`
